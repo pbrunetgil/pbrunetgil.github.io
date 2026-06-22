@@ -514,6 +514,8 @@
     var rotY = -0.4, tiltX = -0.32;
     var dragging = false, lastX = 0, lastY = 0;
     var hoveredId = null;
+    var pressing = false, pressPointerType = null, pressStartX = 0, pressStartY = 0;
+    var DRAG_THRESH = 6;
 
     function project(lat, lon) {
       var p = sphereXYZ(lat, lon);
@@ -638,12 +640,17 @@
     }
 
     canvas.addEventListener("pointerdown", function (e) {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      hoveredId = null;
-      canvas.style.cursor = "grabbing";
+      pressing = true;
+      pressPointerType = e.pointerType;
+      pressStartX = lastX = e.clientX;
+      pressStartY = lastY = e.clientY;
       try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      if (pressPointerType !== "touch") {
+        // Mouse/pen: pressing immediately starts a rotate-drag, same as before.
+        dragging = true;
+        hoveredId = null;
+        canvas.style.cursor = "grabbing";
+      }
     });
     canvas.addEventListener("pointermove", function (e) {
       if (dragging) {
@@ -651,22 +658,38 @@
         tiltX += (e.clientY - lastY) * 0.006;
         lastX = e.clientX;
         lastY = e.clientY;
-      } else {
+      } else if (pressing && pressPointerType === "touch") {
+        // Touch has no hover, so a finger-down is ambiguous between "tap a
+        // node" and "drag to rotate" — decide once the touch actually moves.
+        var dx = e.clientX - pressStartX, dy = e.clientY - pressStartY;
+        if (dx * dx + dy * dy > DRAG_THRESH * DRAG_THRESH) {
+          dragging = true;
+          hoveredId = null;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        }
+      } else if (!pressing) {
         hoveredId = hitTest(e.clientX, e.clientY);
         canvas.style.cursor = hoveredId ? "pointer" : "grab";
       }
       if (reduceMotion) draw();
     });
     function release(e) {
+      if (pressing && pressPointerType === "touch" && !dragging) {
+        // A tap that didn't move enough to count as a drag — highlight
+        // whatever node is under it, mirroring desktop hover.
+        hoveredId = hitTest(e.clientX, e.clientY);
+      }
+      pressing = false;
       dragging = false;
       canvas.style.cursor = hoveredId ? "pointer" : "grab";
       try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
-      if (reduceMotion) draw();
+      draw();
     }
     canvas.addEventListener("pointerup", release);
     canvas.addEventListener("pointercancel", release);
     canvas.addEventListener("pointerleave", function () {
-      if (!dragging) { hoveredId = null; if (reduceMotion) draw(); }
+      if (!dragging && pressPointerType !== "touch") { hoveredId = null; if (reduceMotion) draw(); }
     });
 
     function frame() {
