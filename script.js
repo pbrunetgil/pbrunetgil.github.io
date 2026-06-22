@@ -6,7 +6,10 @@
 (function () {
   "use strict";
 
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Pol wants these signature animations to always play, even for visitors
+  // whose OS/browser reports prefers-reduced-motion (often set automatically
+  // by mobile battery saver, not just by accessibility intent).
+  var reduceMotion = false;
 
   /* ---------- Hero waveform ---------- */
   (function wave() {
