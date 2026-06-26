@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\")"
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\")",
+      "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)",
+      "PowerShell(git config --global credential.helper)",
+      "PowerShell(control /name Microsoft.CredentialManager)"
     ]
   }
 }
