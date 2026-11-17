@@ -432,6 +432,18 @@ strong { font-weight: 600; }
 /* ---------- Contact ---------- */
 .section--contact { background: var(--paper-sink); }
 .contact__lead { margin-top: 1.4rem; max-width: 50ch; color: var(--ink); }
+
+/* Justified body copy (hyphenation avoids wide gaps in narrow columns) */
+.hero__sub,
+.hero__status,
+.about__body p,
+.entry__note,
+.bullets li,
+.contact__lead {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
 .contact__list { margin-top: 1.8rem; display: flex; flex-direction: column; }
 .contact__list li {
   display: grid;
